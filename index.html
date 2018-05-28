@@ -5,47 +5,72 @@
 		<title>Magic the Gathering Arena</title>
 	</head>
 	<style>
+		body {
+			background: url("http://fourletternerd.com/wp-content/uploads/2014/07/magic-the-gathering-game-wallpapers.jpg") no-repeat;
+			text-align: center;
+		}
 
+		img.preview {
+			width: 10%;
+		}
+
+		.lightbox {
+			visibility: hidden;
+			position: fixed;
+			z-index: 9999;
+			width: 100%;
+			height: 100%;
+			text-align: center;
+			top: 0;
+			left: 0;
+			background: black;
+			background: rgba(0,0,0,0.8);
+			opacity: 0;
+			transition: visibility 0s, opacity 0.5s linear;
+		}
+
+		.lightbox img {
+			max-height: 80%;
+			margin-top: 2%;
+			max-width: 90%;
+		}
+
+		.lightbox:target {
+			visibility: visible;
+			opacity: 1;
+			outline: none;
+		}
 	</style>
 	<body>
-	<div id="form">
-		<textarea id="input"></textarea><br />
-		<button id="submit">Send</button>
-	</div>
+		<h1></h1>
+		<div id="form">
+			<textarea id="input"></textarea><br />
+			<button id="submit">Send</button>
+		</div>
 
-	<div id="deck">
-	</div>
-	<script type="text/javascript">
-		let deck = document.querySelector("div#deck");
+		<div id="deck">
+		</div>
+	</body>
+	<script>
 		let form = document.querySelector("div#form");
+		let deck = document.querySelector("div#deck");
 
 		let button = document.querySelector("button#submit");
 		let input = "";
 
-		let request = new XMLHttpRequest();
-
 		let iteration = 0;
 		let items;
 
-		//if request was made. Add card if possible. Then, add another if could be.
-		request.onreadystatechange = () => {
-			if (request.readyState == XMLHttpRequest.DONE) {
-				let object = JSON.parse(request.responseText);
+		let lands = Array();
+		lands[0] = "Swamp";
+		lands[1] = "Plains";
+		lands[2] = "Mountain";
+		lands[3] = "Island";
+		lands[4] = "Forest";
 
-				let url = object.data[0].image_uris.png;
-				deck.innerHTML += `<img src="${url}"></img>`;
-
-				if (items.length - 1 != iteration) {
-					iteration++;
-					getCard(items[iteration]);
-				}
-			}
-		}
-
-		//Actually submit the form
 		button.addEventListener("click", () => {
 			input = document.querySelector("textarea#input").value;
-			console.log(btoa(input));
+
 			iteration = 0;
 			deck.innerHTML = "";
 
@@ -55,7 +80,6 @@
 			}
 		});
 
-		//get JSON response
 		function getCard(item) {
 			item = item.replace(/\([^)]*\)/, '');
 			item = item.replace(/[0-9]+/, '');
@@ -63,9 +87,32 @@
 			item = item.replace(/^\s+|\s+$|\s+(?=\s)/, '');
 			item = item.replace(/^\s+|\s+$|\s+(?=\s)/, '');
 
-			request.open('GET', `https://api.scryfall.com/cards/search?order=cmc&q="${item}"`, true);
-			request.send(null);
+			fetch(`https://api.scryfall.com/cards/search?order=cmc&q="${item}"`)
+			.then(data => data.json().then((json) => {
+				let land = false;
+
+				for (let landtype of lands) {
+					if (item.toUpperCase() === landtype.toUpperCase()) {
+						land = true;
+					}
+				}
+
+				let card_type = 0;
+
+				if (land === true) {
+					card_type = 1; //This must be a little different
+				}
+
+				let url = json.data[card_type].image_uris.png;
+				deck.innerHTML += `<a href="#${iteration}"><img class="preview" src="${url}"></img></a>`;
+				deck.innerHTML += `<a href="#_" id="${iteration}" class="lightbox"><img src="${url}"></img></a>`;
+				if (items.length - 1 != iteration) {
+					iteration++;
+					getCard(items[iteration]);
+				}
+			})).catch((error) => {
+				console.log(error);
+			});
 		}
 	</script>
-	</body>
 </html>
