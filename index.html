@@ -32,7 +32,7 @@
 			if (request.readyState == XMLHttpRequest.DONE) {
 				let object = JSON.parse(request.responseText);
 
-				let url = object.cards[0].imageUrl;
+				let url = object.data[0].image_uris.png;
 				deck.innerHTML += `<img src="${url}"></img>`;
 
 				if (items.length - 1 != iteration) {
@@ -63,7 +63,7 @@
 			item = item.replace(/^\s+|\s+$|\s+(?=\s)/, '');
 			item = item.replace(/^\s+|\s+$|\s+(?=\s)/, '');
 
-			request.open('GET', `https://api.magicthegathering.io/v1/cards?name="${item}"`, true);
+			request.open('GET', `https://api.scryfall.com/cards/search?order=cmc&q="${item}"`, true);
 			request.send(null);
 		}
 	</script>
